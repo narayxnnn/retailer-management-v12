@@ -76,18 +76,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="border-b bg-card">
-        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-          <div>
-            <h1 className="text-xl font-bold">Task Manager</h1>
-            <p className="text-sm text-muted-foreground">Welcome, {username}</p>
-          </div>
-          <Button variant="outline" onClick={handleLogout} className="gap-2 bg-transparent">
-            <LogOut className="h-4 w-4" />
-            Logout
-          </Button>
-        </div>
-      </div>
       <TaskDashboard />
     </div>
   )

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
+import { useRouter } from "next/navigation"
 
 interface AuthFormProps {
   onSuccess: (username: string) => void
@@ -19,6 +20,7 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -33,6 +35,7 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
       })
 
       const data = await response.json()
+      router.push("/")
 
       if (!response.ok) {
         throw new Error(data.error || "Authentication failed")
