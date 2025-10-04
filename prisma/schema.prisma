@@ -1,0 +1,76 @@
+// Prisma schema for PostgreSQL
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  tasks     Task[]
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  retailer    String
+  day         String
+  fileCount   Int
+  xlsxCount   Int      @default(0)
+  csvCount    Int      @default(0)
+  txtCount    Int      @default(0)
+  mailCount   Int      @default(0)
+  loadType    String   // "Direct load" or "Indirect load"
+  
+  // Direct Load fields
+  istTime     String?
+  estTime     String?
+  sqlQuery    String?  @db.Text
+  
+  // Indirect Load fields
+  indirectLoadSource String? // "retailer portal" or "retailer mail"
+  
+  // Retailer Portal fields
+  websiteLink String?
+  portalUsername String?
+  portalPassword String?
+  
+  // Retailer Mail fields
+  mailFolder  String?
+  mailId      String?
+  
+  // Legacy fields
+  link        String   @default("")
+  username    String   @default("")
+  password    String   @default("")
+  
+  files       TaskFile[]
+  completed   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  ktRecordingLink    String?
+  documentationLink  String?
+  instructions       String? @db.Text
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([completed])
+}
+
+model TaskFile {
+  id            String @id @default(cuid())
+  downloadName  String
+  requiredName  String
+  taskId        String
+  task          Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  
+  @@index([taskId])
+}
