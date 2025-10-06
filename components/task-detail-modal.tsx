@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { X, Copy, ExternalLink, Play, Save, Trash2, Plus, Clock, Database, Mail, Globe } from "lucide-react"
+import { X, Copy, ExternalLink, Play, Save, Trash2, Plus, Clock, Database, Mail, Globe, Edit3, Eye, EyeOff } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -25,6 +25,14 @@ export function TaskDetailModal({ task, isOpen, onClose, onUpdate }: TaskDetailM
   const [isCompleted, setIsCompleted] = useState(false)
   const [notes, setNotes] = useState("")
   const [isSaving, setIsSaving] = useState(false)
+  const [isEditingCredentials, setIsEditingCredentials] = useState(false)
+  const [showPasswords, setShowPasswords] = useState<{[key: string]: boolean}>({})
+  const [editedCredentials, setEditedCredentials] = useState({
+    portalPassword: "",
+    password: "",
+    portalUsername: "",
+    username: ""
+  })
   const { toast } = useToast()
 
   useEffect(() => {
@@ -32,6 +40,12 @@ export function TaskDetailModal({ task, isOpen, onClose, onUpdate }: TaskDetailM
       setFiles(task.files || [])
       setIsCompleted(task.completed || false)
       setNotes("")
+      setEditedCredentials({
+        portalPassword: task.retailerPortal?.password || "",
+        password: task.password || "",
+        portalUsername: task.retailerPortal?.username || "",
+        username: task.username || ""
+      })
     }
   }, [task])
 
@@ -78,6 +92,7 @@ export function TaskDetailModal({ task, isOpen, onClose, onUpdate }: TaskDetailM
         body: JSON.stringify({
           files,
           completed: isCompleted,
+          credentials: isEditingCredentials ? editedCredentials : undefined,
         }),
       })
 
@@ -90,6 +105,7 @@ export function TaskDetailModal({ task, isOpen, onClose, onUpdate }: TaskDetailM
         description: "Changes have been saved successfully",
       })
 
+      setIsEditingCredentials(false)
       onUpdate?.()
     } catch (error) {
       toast({
@@ -100,6 +116,34 @@ export function TaskDetailModal({ task, isOpen, onClose, onUpdate }: TaskDetailM
     } finally {
       setIsSaving(false)
     }
+  }
+
+  const togglePasswordVisibility = (field: string) => {
+    setShowPasswords(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }))
+  }
+
+  const handleCredentialChange = (field: keyof typeof editedCredentials, value: string) => {
+    setEditedCredentials(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const startEditingCredentials = () => {
+    setIsEditingCredentials(true)
+  }
+
+  const cancelEditingCredentials = () => {
+    setIsEditingCredentials(false)
+    setEditedCredentials({
+      portalPassword: task.retailerPortal?.password || "",
+      password: task.password || "",
+      portalUsername: task.retailerPortal?.username || "",
+      username: task.username || ""
+    })
   }
 
   const handleBulkCopy = () => {
@@ -125,9 +169,32 @@ export function TaskDetailModal({ task, isOpen, onClose, onUpdate }: TaskDetailM
     return JSON.stringify(files) !== JSON.stringify(task.files) || isCompleted !== task.completed
   }
 
+  const handleCompletedToggle = async (checked: boolean | "indeterminate") => {
+    const nextCompleted = checked === true
+    setIsCompleted(nextCompleted)
+    try {
+      const response = await fetch(`/api/tasks/${task.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ completed: nextCompleted, files }),
+      })
+      if (!response.ok) {
+        throw new Error("Failed to update status")
+      }
+      onUpdate?.()
+    } catch (error) {
+      toast({
+        title: "Status update failed",
+        description: "Unable to update task status",
+        variant: "destructive",
+      })
+      setIsCompleted(task.completed || false)
+    }
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] sm:max-w-[1200px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-2xl font-bold flex items-center gap-3">
@@ -139,7 +206,7 @@ export function TaskDetailModal({ task, isOpen, onClose, onUpdate }: TaskDetailM
               )}
             </DialogTitle>
             <div className="flex items-center gap-2">
-              <Checkbox checked={isCompleted} onCheckedChange={setIsCompleted} id="task-completed" />
+            <Checkbox checked={isCompleted} onCheckedChange={handleCompletedToggle} id="task-completed" />
               <Label htmlFor="task-completed" className="text-sm">
                 Mark as completed
               </Label>
@@ -159,21 +226,46 @@ export function TaskDetailModal({ task, isOpen, onClose, onUpdate }: TaskDetailM
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-3 gap-4">
                     <div>
                       <Label className="text-muted-foreground">IST Time:</Label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Input value={task.directLoadTiming.istTime} readOnly />
-                        <Button size="sm" variant="outline" onClick={() => handleCopy(task.directLoadTiming!.istTime)}>
-                          <Copy className="h-4 w-4" />
-                        </Button>
+                      <div className="mt-1">
+                        <div className="text-2xl font-bold text-foreground">
+                          {task.directLoadTiming.istTime}
+                        </div>
                       </div>
                     </div>
                     <div>
                       <Label className="text-muted-foreground">EST Time:</Label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Input value={task.directLoadTiming.estTime} readOnly />
-                        <Button size="sm" variant="outline" onClick={() => handleCopy(task.directLoadTiming!.estTime)}>
+                      <div className="mt-1">
+                        <div className="text-2xl font-bold text-foreground">
+                          {task.directLoadTiming.estTime}
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground mb-1.5">Current EST Time:</Label>
+                      <div className="flex items-center gap-2">
+                        <Input 
+                          value={new Date().toLocaleString("en-US", { 
+                            timeZone: "America/New_York",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: true
+                          })} 
+                          readOnly 
+                          className="h-8"
+                        />
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => handleCopy(new Date().toLocaleString("en-US", { 
+                            timeZone: "America/New_York",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: true
+                          }))}
+                        >
                           <Copy className="h-4 w-4" />
                         </Button>
                       </div>
@@ -213,9 +305,17 @@ export function TaskDetailModal({ task, isOpen, onClose, onUpdate }: TaskDetailM
               task.retailerPortal && (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Globe className="h-5 w-5" />
-                      Retailer Portal Credentials
+                    <CardTitle className="text-lg flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Globe className="h-5 w-5" />
+                        Retailer Portal Credentials
+                      </div>
+                      {!isEditingCredentials && (
+                        <Button size="sm" variant="outline" onClick={startEditingCredentials}>
+                          <Edit3 className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                      )}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -235,21 +335,53 @@ export function TaskDetailModal({ task, isOpen, onClose, onUpdate }: TaskDetailM
                     <div>
                       <Label>Username:</Label>
                       <div className="flex items-center gap-2 mt-1">
-                        <Input value={task.retailerPortal.username} readOnly />
-                        <Button size="sm" variant="outline" onClick={() => handleCopy(task.retailerPortal!.username)}>
-                          <Copy className="h-4 w-4" />
-                        </Button>
+                        <Input 
+                          value={isEditingCredentials ? editedCredentials.portalUsername : task.retailerPortal.username} 
+                          readOnly={!isEditingCredentials}
+                          onChange={isEditingCredentials ? (e) => handleCredentialChange('portalUsername', e.target.value) : undefined}
+                        />
+                        {!isEditingCredentials && (
+                          <Button size="sm" variant="outline" onClick={() => handleCopy(task.retailerPortal!.username)}>
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                     <div>
                       <Label>Password:</Label>
                       <div className="flex items-center gap-2 mt-1">
-                        <Input type="password" value={task.retailerPortal.password} readOnly />
-                        <Button size="sm" variant="outline" onClick={() => handleCopy(task.retailerPortal!.password)}>
-                          <Copy className="h-4 w-4" />
-                        </Button>
+                        <Input 
+                          type={isEditingCredentials && showPasswords.portalPassword ? "text" : "password"} 
+                          value={isEditingCredentials ? editedCredentials.portalPassword : task.retailerPortal.password} 
+                          readOnly={!isEditingCredentials}
+                          onChange={isEditingCredentials ? (e) => handleCredentialChange('portalPassword', e.target.value) : undefined}
+                        />
+                        {isEditingCredentials ? (
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => togglePasswordVisibility('portalPassword')}
+                          >
+                            {showPasswords.portalPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                        ) : (
+                          <Button size="sm" variant="outline" onClick={() => handleCopy(task.retailerPortal!.password)}>
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </div>
+                    {isEditingCredentials && (
+                      <div className="flex gap-2 pt-2">
+                        <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                          <Save className="h-4 w-4 mr-1" />
+                          Save
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={cancelEditingCredentials}>
+                          Cancel
+                        </Button>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               )}
@@ -288,7 +420,15 @@ export function TaskDetailModal({ task, isOpen, onClose, onUpdate }: TaskDetailM
             {!task.directLoadTiming && !task.retailerPortal && !task.retailerMail && task.link && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Login Credentials</CardTitle>
+                  <CardTitle className="text-lg flex items-center justify-between">
+                    <div>Login Credentials</div>
+                    {!isEditingCredentials && (
+                      <Button size="sm" variant="outline" onClick={startEditingCredentials}>
+                        <Edit3 className="h-4 w-4 mr-1" />
+                        Edit
+                      </Button>
+                    )}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
@@ -303,21 +443,53 @@ export function TaskDetailModal({ task, isOpen, onClose, onUpdate }: TaskDetailM
                   <div>
                     <Label>Username:</Label>
                     <div className="flex items-center gap-2 mt-1">
-                      <Input value={task.username} readOnly />
-                      <Button size="sm" variant="outline" onClick={() => handleCopy(task.username)}>
-                        <Copy className="h-4 w-4" />
-                      </Button>
+                      <Input 
+                        value={isEditingCredentials ? editedCredentials.username : task.username} 
+                        readOnly={!isEditingCredentials}
+                        onChange={isEditingCredentials ? (e) => handleCredentialChange('username', e.target.value) : undefined}
+                      />
+                      {!isEditingCredentials && (
+                        <Button size="sm" variant="outline" onClick={() => handleCopy(task.username)}>
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                   <div>
                     <Label>Password:</Label>
                     <div className="flex items-center gap-2 mt-1">
-                      <Input type="password" value={task.password} readOnly />
-                      <Button size="sm" variant="outline" onClick={() => handleCopy(task.password)}>
-                        <Copy className="h-4 w-4" />
-                      </Button>
+                      <Input 
+                        type={isEditingCredentials && showPasswords.password ? "text" : "password"} 
+                        value={isEditingCredentials ? editedCredentials.password : task.password} 
+                        readOnly={!isEditingCredentials}
+                        onChange={isEditingCredentials ? (e) => handleCredentialChange('password', e.target.value) : undefined}
+                      />
+                      {isEditingCredentials ? (
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => togglePasswordVisibility('password')}
+                        >
+                          {showPasswords.password ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      ) : (
+                        <Button size="sm" variant="outline" onClick={() => handleCopy(task.password)}>
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
+                  {isEditingCredentials && (
+                    <div className="flex gap-2 pt-2">
+                      <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                        <Save className="h-4 w-4 mr-1" />
+                        Save
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={cancelEditingCredentials}>
+                        Cancel
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -508,3 +680,5 @@ export function TaskDetailModal({ task, isOpen, onClose, onUpdate }: TaskDetailM
     </Dialog>
   )
 }
+
+

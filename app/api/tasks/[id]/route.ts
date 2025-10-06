@@ -15,7 +15,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       where: { id: params.id },
     })
 
-    if (!existingTask || existingTask.userId !== session.userId) {
+    if (!existingTask) {
       return NextResponse.json({ error: "Task not found" }, { status: 404 })
     }
 
@@ -23,33 +23,54 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       where: { taskId: params.id },
     })
 
+    // Handle credential updates if provided
+    const updateData: any = {
+      retailer: taskData.retailer,
+      day: taskData.day,
+      fileCount: taskData.fileCount,
+      xlsxCount: taskData.formats?.xlsx || 0,
+      csvCount: taskData.formats?.csv || 0,
+      txtCount: taskData.formats?.txt || 0,
+      mailCount: taskData.formats?.mail || 0,
+      loadType: taskData.loadType,
+      istTime: taskData.directLoadTiming?.istTime,
+      estTime: taskData.directLoadTiming?.estTime,
+      sqlQuery: taskData.directLoadTiming?.sqlQuery,
+      indirectLoadSource: taskData.indirectLoadSource,
+      websiteLink: taskData.retailerPortal?.websiteLink,
+      portalUsername: taskData.retailerPortal?.username,
+      portalPassword: taskData.retailerPortal?.password,
+      mailFolder: taskData.retailerMail?.mailFolder,
+      mailId: taskData.retailerMail?.mailId,
+      link: taskData.link || "",
+      username: taskData.username || "",
+      password: taskData.password || "",
+      completed: taskData.completed,
+      ktRecordingLink: taskData.ktRecordingLink,
+      documentationLink: taskData.documentationLink,
+      instructions: taskData.instructions,
+    }
+
+    // Update credentials if provided
+    if (taskData.credentials) {
+      if (taskData.credentials.portalPassword !== undefined) {
+        updateData.portalPassword = taskData.credentials.portalPassword
+      }
+      if (taskData.credentials.password !== undefined) {
+        updateData.password = taskData.credentials.password
+      }
+      if (taskData.credentials.portalUsername !== undefined) {
+        updateData.portalUsername = taskData.credentials.portalUsername
+      }
+      if (taskData.credentials.username !== undefined) {
+        updateData.username = taskData.credentials.username
+      }
+    }
+
     const updatedTask = await prisma.task.update({
       where: { id: params.id },
       data: {
-        retailer: taskData.retailer,
-        day: taskData.day,
-        fileCount: taskData.fileCount,
-        xlsxCount: taskData.formats?.xlsx || 0,
-        csvCount: taskData.formats?.csv || 0,
-        txtCount: taskData.formats?.txt || 0,
-        mailCount: taskData.formats?.mail || 0,
-        loadType: taskData.loadType,
-        istTime: taskData.directLoadTiming?.istTime,
-        estTime: taskData.directLoadTiming?.estTime,
-        sqlQuery: taskData.directLoadTiming?.sqlQuery,
-        indirectLoadSource: taskData.indirectLoadSource,
-        websiteLink: taskData.retailerPortal?.websiteLink,
-        portalUsername: taskData.retailerPortal?.username,
-        portalPassword: taskData.retailerPortal?.password,
-        mailFolder: taskData.retailerMail?.mailFolder,
-        mailId: taskData.retailerMail?.mailId,
-        link: taskData.link || "",
-        username: taskData.username || "",
-        password: taskData.password || "",
-        completed: taskData.completed,
-        ktRecordingLink: taskData.ktRecordingLink,
-        documentationLink: taskData.documentationLink,
-        instructions: taskData.instructions,
+        ...updateData,
         files: {
           create:
             taskData.files?.map((file: any) => ({
@@ -81,7 +102,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       where: { id: params.id },
     })
 
-    if (!task || task.userId !== session.userId) {
+    if (!task) {
       return NextResponse.json({ error: "Task not found" }, { status: 404 })
     }
 

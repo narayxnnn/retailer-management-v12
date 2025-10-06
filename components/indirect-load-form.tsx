@@ -30,7 +30,7 @@ export function IndirectLoadForm({
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <Label htmlFor="source">Select Source</Label>
+          <Label htmlFor="source" className="mb-1.5">Select Source</Label>
           <Select value={source} onValueChange={onSourceChange}>
             <SelectTrigger id="source">
               <SelectValue />
@@ -46,7 +46,7 @@ export function IndirectLoadForm({
           <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
             <h4 className="font-medium text-sm">Login Credentials Data</h4>
             <div>
-              <Label htmlFor="websiteLink">Website Link</Label>
+              <Label htmlFor="websiteLink" className="mb-1.5">Website Link</Label>
               <Input
                 id="websiteLink"
                 type="url"
@@ -58,7 +58,7 @@ export function IndirectLoadForm({
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="portalUsername">Username</Label>
+                <Label htmlFor="portalUsername" className="mb-1.5">Username</Label>
                 <Input
                   id="portalUsername"
                   placeholder="Username"
@@ -68,7 +68,7 @@ export function IndirectLoadForm({
                 />
               </div>
               <div>
-                <Label htmlFor="portalPassword">Password</Label>
+                <Label htmlFor="portalPassword" className="mb-1.5">Password</Label>
                 <Input
                   id="portalPassword"
                   type="password"
@@ -86,7 +86,7 @@ export function IndirectLoadForm({
           <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
             <h4 className="font-medium text-sm">Mail Information</h4>
             <div>
-              <Label htmlFor="mailFolder">Mail Folder</Label>
+              <Label htmlFor="mailFolder" className="mb-1.5">Mail Folder</Label>
               <Input
                 id="mailFolder"
                 placeholder="e.g., Inbox/Retailer"
@@ -96,7 +96,7 @@ export function IndirectLoadForm({
               />
             </div>
             <div>
-              <Label htmlFor="mailId">Mail ID</Label>
+              <Label htmlFor="mailId" className="mb-1.5">Mail ID</Label>
               <Input
                 id="mailId"
                 type="email"

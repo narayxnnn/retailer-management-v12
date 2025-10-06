@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { Textarea } from "@/components/ui/textarea"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Plus } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -58,6 +58,11 @@ export function AddTaskModal({ onTaskAdded }: AddTaskModalProps) {
   })
 
   const [activeTab, setActiveTab] = useState("direct")
+
+  // Sync activeTab with loadType
+  useEffect(() => {
+    setActiveTab(formData.loadType === "Direct load" ? "direct" : "indirect")
+  }, [formData.loadType])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -136,7 +141,7 @@ export function AddTaskModal({ onTaskAdded }: AddTaskModalProps) {
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px] w-[60vw] max-h-[90vh] overflow-y-auto p-6 rounded-lg bg-blue-200">
           <DialogHeader>
             <DialogTitle className="text-xl sm:text-2xl">Add New Task</DialogTitle>
           </DialogHeader>
@@ -148,7 +153,7 @@ export function AddTaskModal({ onTaskAdded }: AddTaskModalProps) {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="retailer">Retailer Name</Label>
+                  <Label htmlFor="retailer" className="mb-1.5">Retailer Name</Label>
                   <Input
                     id="retailer"
                     value={formData.retailer}
@@ -158,25 +163,28 @@ export function AddTaskModal({ onTaskAdded }: AddTaskModalProps) {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="day">Schedule</Label>
+                  <Label htmlFor="day" className="mb-1.5">Schedule</Label>
                   <Select value={formData.day} onValueChange={(value) => setFormData({ ...formData, day: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select schedule" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Today's load">Today's load</SelectItem>
+                    <SelectItem value="Mon - Fri">Mon - Fri</SelectItem>
+                    <SelectItem value="Mon - Sun">Mon - Sun</SelectItem>
                       <SelectItem value="Monday">Monday</SelectItem>
                       <SelectItem value="Tuesday">Tuesday</SelectItem>
                       <SelectItem value="Wednesday">Wednesday</SelectItem>
                       <SelectItem value="Thursday">Thursday</SelectItem>
                       <SelectItem value="Friday">Friday</SelectItem>
+                      <SelectItem value="Saturday">Saturday</SelectItem>
+                      <SelectItem value="Sunday">Sunday</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="loadType">Load Type</Label>
+                <Label htmlFor="loadType" className="mb-1.5">Load Type</Label>
                 <Select
                   value={formData.loadType}
                   onValueChange={(value: "Direct load" | "Indirect load") =>
@@ -197,10 +205,18 @@ export function AddTaskModal({ onTaskAdded }: AddTaskModalProps) {
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="direct" className="text-xs sm:text-sm">
+              <TabsTrigger 
+                value="direct" 
+                className="text-xs sm:text-sm"
+                disabled={formData.loadType !== "Direct load"}
+              >
                 Direct Load
               </TabsTrigger>
-              <TabsTrigger value="indirect" className="text-xs sm:text-sm">
+              <TabsTrigger 
+                value="indirect" 
+                className="text-xs sm:text-sm"
+                disabled={formData.loadType !== "Indirect load"}
+              >
                 Indirect Load
               </TabsTrigger>
             </TabsList>
@@ -225,7 +241,7 @@ export function AddTaskModal({ onTaskAdded }: AddTaskModalProps) {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="ktRecordingLink">KT Recording Link</Label>
+                <Label htmlFor="ktRecordingLink" className="mb-1.5">KT Recording Link</Label>
                 <Input
                   id="ktRecordingLink"
                   type="url"
@@ -235,7 +251,7 @@ export function AddTaskModal({ onTaskAdded }: AddTaskModalProps) {
                 />
               </div>
               <div>
-                <Label htmlFor="documentationLink">Documentation Link</Label>
+                <Label htmlFor="documentationLink" className="mb-1.5">Documentation Link</Label>
                 <Input
                   id="documentationLink"
                   type="url"
@@ -245,7 +261,7 @@ export function AddTaskModal({ onTaskAdded }: AddTaskModalProps) {
                 />
               </div>
               <div>
-                <Label htmlFor="instructions">Task Instructions</Label>
+                <Label htmlFor="instructions" className="mb-1.5">Task Instructions</Label>
                 <Textarea
                   id="instructions"
                   value={formData.instructions}

@@ -23,8 +23,39 @@ const generateTimeSlots = () => {
   return slots
 }
 
+// Convert IST to EST
+// IST is UTC+5:30, EST is UTC-5:00
+// Difference: IST - EST = 10 hours 30 minutes
+const convertISTtoEST = (istTime: string): string => {
+  if (!istTime) return ""
+  
+  const [hours, minutes] = istTime.split(":").map(Number)
+  
+  // Convert IST to minutes
+  let totalMinutes = hours * 60 + minutes
+  
+  // Subtract 10 hours 30 minutes (630 minutes)
+  totalMinutes -= 630
+  
+  // Handle negative values (previous day)
+  if (totalMinutes < 0) {
+    totalMinutes += 1440 // Add 24 hours in minutes
+  }
+  
+  // Convert back to hours and minutes
+  const estHours = Math.floor(totalMinutes / 60) % 24
+  const estMinutes = totalMinutes % 60
+  
+  return `${estHours.toString().padStart(2, "0")}:${estMinutes.toString().padStart(2, "0")}`
+}
+
 export function DirectLoadForm({ data, onChange }: DirectLoadFormProps) {
   const timeSlots = generateTimeSlots()
+
+  const handleISTChange = (value: string) => {
+    const estTime = convertISTtoEST(value)
+    onChange({ ...data, istTime: value, estTime })
+  }
 
   return (
     <Card>
@@ -34,8 +65,8 @@ export function DirectLoadForm({ data, onChange }: DirectLoadFormProps) {
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="istTime">IST Time (30 min slots)</Label>
-            <Select value={data.istTime} onValueChange={(value) => onChange({ ...data, istTime: value })}>
+            <Label htmlFor="istTime" className="mb-1.5">IST Time (30 min slots)</Label>
+            <Select value={data.istTime} onValueChange={handleISTChange}>
               <SelectTrigger id="istTime">
                 <SelectValue placeholder="Select IST time" />
               </SelectTrigger>
@@ -49,10 +80,10 @@ export function DirectLoadForm({ data, onChange }: DirectLoadFormProps) {
             </Select>
           </div>
           <div>
-            <Label htmlFor="estTime">EST Time (30 min slots)</Label>
-            <Select value={data.estTime} onValueChange={(value) => onChange({ ...data, estTime: value })}>
+            <Label htmlFor="estTime" className="mb-1.5">EST Time (30 min slots)</Label>
+            <Select value={data.estTime} onValueChange={(value) => onChange({ ...data, estTime: value })} disabled>
               <SelectTrigger id="estTime">
-                <SelectValue placeholder="Select EST time" />
+                <SelectValue placeholder="Calculated EST" />
               </SelectTrigger>
               <SelectContent className="max-h-60">
                 {timeSlots.map((slot) => (
@@ -62,10 +93,13 @@ export function DirectLoadForm({ data, onChange }: DirectLoadFormProps) {
                 ))}
               </SelectContent>
             </Select>
+            {/* {data.estTime && (
+              <p className="text-xs text-gray-500 mt-1">Auto-calculated: {data.estTime} EST</p>
+            )} */}
           </div>
         </div>
         <div>
-          <Label htmlFor="sqlQuery">SQL Query (Optional)</Label>
+          <Label htmlFor="sqlQuery" className="mb-1.5">SQL Query (Optional)</Label>
           <Textarea
             id="sqlQuery"
             placeholder="Enter SQL query if applicable..."

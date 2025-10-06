@@ -13,9 +13,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search") || ""
     const day = searchParams.get("day") || "all"
 
-    const where: any = {
-      userId: session.userId,
-    }
+    const where: any = {}
 
     if (search) {
       where.retailer = {

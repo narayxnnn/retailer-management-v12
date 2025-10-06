@@ -23,7 +23,15 @@ import { AddTaskModal } from "@/components/add-task-modal"
 import { ThemeToggle } from "@/components/theme-toggle"
 import type { Task } from "@/lib/types"
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json())
+const fetcher = async (url: string) => {
+  const res = await fetch(url)
+  if (!res.ok) {
+    // Ensure SWR surfaces an error instead of passing a non-array JSON to the UI
+    const message = await res.text()
+    throw new Error(message || `Request failed: ${res.status}`)
+  }
+  return res.json()
+}
 
 export function TaskDashboard() {
   const router = useRouter()
@@ -65,7 +73,18 @@ export function TaskDashboard() {
     { refreshInterval: 30000 }, // Refresh every 30 seconds
   )
 
-  const filteredAndSortedTasks = tasks
+  // Keep the open modal's selectedTask in sync with the latest fetched data
+  useEffect(() => {
+    if (!isModalOpen || !selectedTask) return
+    const updated = tasks.find((t) => t.id === selectedTask.id)
+    if (updated) {
+      setSelectedTask(updated)
+    }
+  }, [tasks, isModalOpen, selectedTask?.id])
+
+  const safeTasks: Task[] = Array.isArray(tasks) ? tasks : []
+
+  const filteredAndSortedTasks = safeTasks
     .filter((task) => {
       const matchesLoadType = loadTypeFilter === "all" || task.loadType === loadTypeFilter
       const matchesStatus =
@@ -218,10 +237,15 @@ export function TaskDashboard() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Days</SelectItem>
-              <SelectItem value="today">Today's load</SelectItem>
-              <SelectItem value="monday">Monday</SelectItem>
-              <SelectItem value="tuesday">Tuesday</SelectItem>
-              <SelectItem value="wednesday">Wednesday</SelectItem>
+              <SelectItem value="Mon - Fri">Mon - Fri</SelectItem>
+                    <SelectItem value="Mon - Sun">Mon - Sun</SelectItem>
+                      <SelectItem value="Monday">Monday</SelectItem>
+                      <SelectItem value="Tuesday">Tuesday</SelectItem>
+                      <SelectItem value="Wednesday">Wednesday</SelectItem>
+                      <SelectItem value="Thursday">Thursday</SelectItem>
+                      <SelectItem value="Friday">Friday</SelectItem>
+                      <SelectItem value="Saturday">Saturday</SelectItem>
+                      <SelectItem value="Sunday">Sunday</SelectItem>
             </SelectContent>
           </Select>
 
