@@ -201,7 +201,7 @@ export function TaskDashboard() {
       <header className="border-b border-border bg-card">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-6 py-4 gap-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 w-full sm:w-auto">
-            <h1 className="text-xl font-bold">TaskFlow</h1>
+            <h1 className="text-xl font-bold">Guide4360</h1>
             <div className="relative w-full sm:w-80">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input

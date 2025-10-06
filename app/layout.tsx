@@ -9,9 +9,9 @@ import { Suspense } from "react"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "TaskFlow - Task Management App",
+  title: "Guide4360 - Retailer Management App",
   description: "Manage retailer tasks efficiently",
-  generator: "v0.app",
+  generator: "app.guide4360.com",
 }
 
 export default function RootLayout({

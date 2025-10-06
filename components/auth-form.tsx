@@ -62,8 +62,8 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center space-y-2">
-          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Task Manager
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r text-blue-950 dark:text-blue-400 bg-clip-text">
+            Guide4360 Retailer Manager
           </CardTitle>
           <CardDescription className="text-base">
             {isLogin ? "Sign in to your account" : "Create a new account"}
